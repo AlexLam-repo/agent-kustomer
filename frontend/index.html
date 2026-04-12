@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentos — Gestor de Agentes</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #f5f4f0;
+    --surface: #ffffff;
+    --border: rgba(0,0,0,0.1);
+    --border-strong: rgba(0,0,0,0.2);
+    --text: #1a1a18;
+    --text-2: #5f5e5a;
+    --text-3: #9a9890;
+    --accent: #2d2d2b;
+    --accent-fg: #ffffff;
+    --blue: #185fa5;
+    --blue-bg: #e6f1fb;
+    --green: #0f6e56;
+    --green-bg: #e1f5ee;
+    --amber: #854f0b;
+    --amber-bg: #faeeda;
+    --red: #a32d2d;
+    --red-bg: #fcebeb;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── Layout ── */
+  .shell { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 220px;
+    flex-shrink: 0;
+    background: var(--surface);
+    border-right: 0.5px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+  }
+
+  .sidebar-logo {
+    padding: 20px 18px 16px;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .sidebar-logo h1 { font-size: 16px; font-weight: 600; letter-spacing: -0.3px; }
+  .sidebar-logo p { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+
+  .nav { flex: 1; padding: 10px 8px; }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--text-2);
+    font-size: 13px;
+    font-weight: 500;
+    transition: all .12s;
+    margin-bottom: 2px;
+  }
+  .nav-item:hover { background: var(--bg); color: var(--text); }
+  .nav-item.active { background: var(--accent); color: #fff; }
+  .nav-icon { font-size: 15px; width: 18px; text-align: center; }
+
+  .sidebar-footer {
+    padding: 12px 8px;
+    border-top: 0.5px solid var(--border);
+  }
+  .api-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 10px;
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    font-size: 12px;
+    color: var(--text-2);
+  }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+  .dot.red { background: var(--red); }
+
+  .main { flex: 1; overflow: auto; }
+
+  .topbar {
+    background: var(--surface);
+    border-bottom: 0.5px solid var(--border);
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .page-title { font-size: 15px; font-weight: 600; }
+  .topbar-actions { display: flex; gap: 8px; align-items: center; }
+
+  .content { padding: 24px 28px; }
+
+  /* ── Sections ── */
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
+
+  .agent-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .agent-card:hover { border-color: var(--border-strong); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .agent-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+  .agent-name { font-size: 14px; font-weight: 600; }
+  .agent-role { font-size: 11px; color: var(--text-2); margin-top: 2px; }
+  .agent-model { font-size: 11px; color: var(--text-3); }
+  .agent-tools { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 10px; }
+  .agent-instructions { font-size: 12px; color: var(--text-2); line-height: 1.5; margin-top: 8px;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .12s;
+    white-space: nowrap;
+  }
+  .btn:hover { background: var(--bg); }
+  .btn-primary { background: var(--accent); color: #fff; border-color: transparent; }
+  .btn-primary:hover { opacity: .88; background: var(--accent); }
+  .btn-danger { background: var(--red-bg); color: var(--red); border-color: transparent; }
+  .btn-sm { padding: 4px 10px; font-size: 12px; }
+
+  /* ── Badges ── */
+  .badge {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+  .badge-blue { background: var(--blue-bg); color: var(--blue); }
+  .badge-green { background: var(--green-bg); color: var(--green); }
+  .badge-amber { background: var(--amber-bg); color: var(--amber); }
+  .badge-gray { background: var(--bg); color: var(--text-2); border: 0.5px solid var(--border); }
+
+  /* ── Forms ── */
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-size: 12px; font-weight: 500; color: var(--text-2); margin-bottom: 5px; }
+  .form-input {
+    width: 100%;
+    padding: 8px 11px;
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+    transition: border-color .12s;
+    outline: none;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  .form-textarea { min-height: 120px; resize: vertical; }
+  .form-select { appearance: none; cursor: pointer; }
+  .form-hint { font-size: 11px; color: var(--text-3); margin-top: 4px; }
+
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  /* ── Modal ── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.35);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: var(--radius);
+    width: 100%;
+    max-width: 580px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  }
+  .modal-header {
+    padding: 18px 20px 14px;
+    border-bottom: 0.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .modal-title { font-size: 15px; font-weight: 600; }
+  .modal-close {
+    width: 28px; height: 28px; border-radius: 6px;
+    border: none; background: var(--bg); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; color: var(--text-2);
+  }
+  .modal-body { padding: 20px; }
+  .modal-footer {
+    padding: 14px 20px;
+    border-top: 0.5px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  /* ── Table ── */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    padding: 8px 12px;
+    border-bottom: 0.5px solid var(--border);
+  }
+  td {
+    padding: 11px 12px;
+    font-size: 13px;
+    border-bottom: 0.5px solid var(--border);
+    vertical-align: middle;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--bg); }
+
+  /* ── Tools checkboxes ── */
+  .tool-checks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-height: 180px; overflow-y: auto; }
+  .tool-check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: border-color .12s;
+  }
+  .tool-check-item:hover { border-color: var(--border-strong); }
+  .tool-check-item input { margin-top: 2px; accent-color: var(--accent); }
+  .tool-check-name { font-size: 12px; font-weight: 500; }
+  .tool-check-desc { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+
+  /* ── Stat cards ── */
+  .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+  .stat-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
+  .stat-label { font-size: 11px; color: var(--text-3); font-weight: 500; text-transform: uppercase; letter-spacing: .04em; }
+  .stat-val { font-size: 26px; font-weight: 600; margin-top: 4px; }
+
+  /* ── Toast ── */
+  .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
+  .toast {
+    background: var(--accent);
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    animation: slideIn .2s ease;
+  }
+  .toast.error { background: var(--red); }
+  @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+  /* ── Empty state ── */
+  .empty { text-align: center; padding: 48px 20px; color: var(--text-3); }
+  .empty-icon { font-size: 36px; margin-bottom: 12px; }
+  .empty p { font-size: 14px; }
+
+  /* ── Settings ── */
+  .settings-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 0;
+    border-bottom: 0.5px solid var(--border);
+  }
+  .settings-row:last-child { border-bottom: none; }
+  .settings-label { font-size: 13px; font-weight: 500; }
+  .settings-hint { font-size: 12px; color: var(--text-3); margin-top: 2px; }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <h1>⚡ Agentos</h1>
+      <p>Gestor de Agentes IA</p>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" onclick="showSection('dashboard')" id="nav-dashboard">
+        <span class="nav-icon">◼</span> Dashboard
+      </div>
+      <div class="nav-item" onclick="showSection('agents')" id="nav-agents">
+        <span class="nav-icon">🤖</span> Agentes
+      </div>
+      <div class="nav-item" onclick="showSection('tools')" id="nav-tools">
+        <span class="nav-icon">🔧</span> Tools
+      </div>
+      <div class="nav-item" onclick="showSection('sessions')" id="nav-sessions">
+        <span class="nav-icon">💬</span> Sesiones
+      </div>
+      <div class="nav-item" onclick="showSection('settings')" id="nav-settings">
+        <span class="nav-icon">⚙️</span> Configuración
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="api-indicator">
+        <div class="dot" id="api-dot"></div>
+        <span id="api-status">Conectando...</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div class="page-title" id="page-title">Dashboard</div>
+      <div class="topbar-actions" id="topbar-actions"></div>
+    </div>
+
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="section active" id="section-dashboard">
+        <div class="stats" id="stats-grid">
+          <div class="stat-card"><div class="stat-label">Agentes</div><div class="stat-val" id="stat-agents">—</div></div>
+          <div class="stat-card"><div class="stat-label">Tools</div><div class="stat-val" id="stat-tools">—</div></div>
+          <div class="stat-card"><div class="stat-label">Sesiones activas</div><div class="stat-val" id="stat-sessions">—</div></div>
+          <div class="stat-card"><div class="stat-label">API</div><div class="stat-val" id="stat-api" style="font-size:14px;margin-top:8px">—</div></div>
+        </div>
+        <div class="card">
+          <div style="font-size:13px;font-weight:600;margin-bottom:12px">Sesiones recientes</div>
+          <div id="recent-sessions-list"></div>
+        </div>
+      </div>
+
+      <!-- AGENTS -->
+      <div class="section" id="section-agents">
+        <div class="card-grid" id="agents-grid"></div>
+      </div>
+
+      <!-- TOOLS -->
+      <div class="section" id="section-tools">
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Función</th>
+                  <th>Descripción</th>
+                  <th>Estado</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="tools-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card" style="border: 0.5px solid var(--amber-bg)">
+          <div style="font-size:12px;font-weight:600;color:var(--amber);margin-bottom:6px">📦 Funciones disponibles en el backend</div>
+          <div id="registry-list" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+        </div>
+      </div>
+
+      <!-- SESSIONS -->
+      <div class="section" id="section-sessions">
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Cliente ID</th>
+                  <th>Agente</th>
+                  <th>Thread</th>
+                  <th>Última actividad</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="sessions-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="section" id="section-settings">
+        <div class="card">
+          <div style="font-size:13px;font-weight:600;margin-bottom:14px">Conexión al backend</div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">URL del backend</div>
+              <div class="settings-hint">URL base de tu API (sin / al final)</div>
+            </div>
+            <input class="form-input" style="max-width:280px" id="setting-url" placeholder="https://tu-app.railway.app">
+          </div>
+          <div class="settings-row">
+            <div>
+              <div class="settings-label">Admin Secret</div>
+              <div class="settings-hint">El valor de ADMIN_SECRET en tu .env</div>
+            </div>
+            <input class="form-input" style="max-width:280px" type="password" id="setting-secret" placeholder="cambia-esto-en-produccion">
+          </div>
+          <div style="margin-top:14px;display:flex;gap:8px">
+            <button class="btn btn-primary" onclick="saveSettings()">Guardar y probar conexión</button>
+            <button class="btn" onclick="testConnection()">Probar conexión</button>
+          </div>
+        </div>
+        <div class="card">
+          <div style="font-size:13px;font-weight:600;margin-bottom:12px">Guía rápida de Kustomer</div>
+          <ol style="font-size:13px;line-height:2;color:var(--text-2);padding-left:18px">
+            <li>Ve a <strong>Kustomer → Settings → Webhooks → Add Webhook</strong></li>
+            <li>URL: <code style="background:var(--bg);padding:1px 5px;border-radius:4px" id="webhook-url-hint">https://tu-app.railway.app/kustomer/webhook</code></li>
+            <li>Events: <code style="background:var(--bg);padding:1px 5px;border-radius:4px">kustomer.conversation.message.send</code></li>
+            <li>Copia el <strong>Webhook Secret</strong> generado → ponlo en <code style="background:var(--bg);padding:1px 5px;border-radius:4px">KUSTOMER_WEBHOOK_SECRET</code></li>
+            <li>Ve a <strong>Settings → API Keys → Add API Key</strong> → ponlo en <code style="background:var(--bg);padding:1px 5px;border-radius:4px">KUSTOMER_API_KEY</code></li>
+          </ol>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /shell -->
+
+<!-- Toast container -->
+<div class="toast-container" id="toasts"></div>
+
+<!-- Agent Modal -->
+<div class="modal-overlay" id="agent-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="agent-modal-title">Nuevo agente</div>
+      <button class="modal-close" onclick="closeModal('agent-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="agent-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nombre (identificador único)</label>
+          <input class="form-input" id="agent-name" placeholder="ventas_principal">
+          <div class="form-hint">Solo letras, números y guiones bajos</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nombre para mostrar</label>
+          <input class="form-input" id="agent-display-name" placeholder="Agente de Ventas">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Modelo IA</label>
+          <select class="form-input form-select" id="agent-model">
+            <option value="gpt-4o-mini">GPT-4o Mini (rápido y económico)</option>
+            <option value="gpt-4o">GPT-4o (más capaz)</option>
+            <option value="gpt-4-turbo">GPT-4 Turbo</option>
+            <option value="claude-3-5-haiku-20241022">Claude 3.5 Haiku</option>
+            <option value="claude-sonnet-4-5">Claude Sonnet 4.5</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Rol</label>
+          <select class="form-input form-select" id="agent-role">
+            <option value="default">default</option>
+            <option value="sales">sales</option>
+            <option value="support">support</option>
+            <option value="billing">billing</option>
+            <option value="custom">custom</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Instrucciones del sistema</label>
+        <textarea class="form-input form-textarea" id="agent-instructions" placeholder="Eres un asistente de servicio al cliente..."></textarea>
+        <div class="form-hint">Define el comportamiento, personalidad y limitaciones del agente</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tools asignadas</label>
+        <div class="tool-checks" id="tool-checks-container"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Estado</label>
+        <select class="form-input form-select" id="agent-active">
+          <option value="true">Activo</option>
+          <option value="false">Inactivo</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('agent-modal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveAgent()">Guardar agente</button>
+    </div>
+  </div>
+</div>
+
+<!-- Tool Modal -->
+<div class="modal-overlay" id="tool-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="tool-modal-title">Nueva tool</div>
+      <button class="modal-close" onclick="closeModal('tool-modal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="tool-id">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Nombre (identificador)</label>
+          <input class="form-input" id="tool-name" placeholder="get_customer_info">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nombre para mostrar</label>
+          <input class="form-input" id="tool-display-name" placeholder="Obtener info de cliente">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Función en el backend</label>
+        <select class="form-input form-select" id="tool-function-name">
+          <option value="">— Selecciona una función —</option>
+        </select>
+        <div class="form-hint">Funciones registradas en app/agents/registry.py</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Descripción (el agente lee esto para decidir cuándo usar la tool)</label>
+        <textarea class="form-input" style="min-height:80px;resize:vertical" id="tool-description" placeholder="Obtiene información detallada de un cliente dado su ID..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('tool-modal')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveTool()">Guardar tool</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────
+let API_URL = localStorage.getItem('ag_url') || '';
+let ADMIN_SECRET = localStorage.getItem('ag_secret') || '';
+let allTools = [];
+let registryFns = [];
+let currentSection = 'dashboard';
+
+// ── Init ──────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  document.getElementById('setting-url').value = API_URL;
+  document.getElementById('setting-secret').value = ADMIN_SECRET;
+  if (API_URL) {
+    document.getElementById('webhook-url-hint').textContent = API_URL + '/kustomer/webhook';
+    testConnection(true);
+    loadDashboard();
+  } else {
+    showSection('settings');
+    toast('Configura la URL del backend para empezar', false);
+  }
+});
+
+// ── Navigation ────────────────────────────────────────────────────
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('section-' + name).classList.add('active');
+  document.getElementById('nav-' + name).classList.add('active');
+  currentSection = name;
+
+  const titles = { dashboard: 'Dashboard', agents: 'Agentes', tools: 'Tools', sessions: 'Sesiones activas', settings: 'Configuración' };
+  document.getElementById('page-title').textContent = titles[name] || name;
+
+  const actions = document.getElementById('topbar-actions');
+  actions.innerHTML = '';
+
+  if (name === 'agents') {
+    actions.innerHTML = `<button class="btn btn-primary" onclick="openNewAgent()">+ Nuevo agente</button>`;
+    loadAgents();
+  } else if (name === 'tools') {
+    actions.innerHTML = `<button class="btn btn-primary" onclick="openNewTool()">+ Nueva tool</button>`;
+    loadTools();
+  } else if (name === 'sessions') {
+    actions.innerHTML = `<button class="btn" onclick="loadSessions()">↻ Refrescar</button>`;
+    loadSessions();
+  } else if (name === 'dashboard') {
+    loadDashboard();
+  }
+}
+
+// ── API helpers ───────────────────────────────────────────────────
+async function api(path, opts = {}) {
+  const url = API_URL + path;
+  const headers = { 'Content-Type': 'application/json', 'x-admin-secret': ADMIN_SECRET, ...opts.headers };
+  const res = await fetch(url, { ...opts, headers });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: res.statusText }));
+    throw new Error(err.detail || res.statusText);
+  }
+  if (res.status === 204) return null;
+  return res.json();
+}
+
+// ── Connection ────────────────────────────────────────────────────
+async function testConnection(silent = false) {
+  try {
+    await fetch(API_URL + '/_/health');
+    document.getElementById('api-dot').className = 'dot';
+    document.getElementById('api-status').textContent = 'Conectado';
+    document.getElementById('stat-api').textContent = '✓ OK';
+    document.getElementById('stat-api').style.color = 'var(--green)';
+    if (!silent) toast('Conexión exitosa ✓');
+  } catch {
+    document.getElementById('api-dot').className = 'dot red';
+    document.getElementById('api-status').textContent = 'Sin conexión';
+    document.getElementById('stat-api').textContent = '✗ Error';
+    document.getElementById('stat-api').style.color = 'var(--red)';
+    if (!silent) toast('No se pudo conectar al backend', true);
+  }
+}
+
+function saveSettings() {
+  API_URL = document.getElementById('setting-url').value.trim().replace(/\/$/, '');
+  ADMIN_SECRET = document.getElementById('setting-secret').value.trim();
+  localStorage.setItem('ag_url', API_URL);
+  localStorage.setItem('ag_secret', ADMIN_SECRET);
+  document.getElementById('webhook-url-hint').textContent = API_URL + '/kustomer/webhook';
+  testConnection();
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const [agents, tools, sessions] = await Promise.all([
+      api('/admin/agents').catch(() => []),
+      api('/admin/tools').catch(() => []),
+      api('/admin/sessions?limit=10').catch(() => []),
+    ]);
+    document.getElementById('stat-agents').textContent = agents.length;
+    document.getElementById('stat-tools').textContent = tools.length;
+    document.getElementById('stat-sessions').textContent = sessions.length;
+
+    const list = document.getElementById('recent-sessions-list');
+    if (!sessions.length) {
+      list.innerHTML = `<div class="empty"><div class="empty-icon">💬</div><p>Sin sesiones aún</p></div>`;
+      return;
+    }
+    list.innerHTML = sessions.slice(0, 5).map(s => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:0.5px solid var(--border)">
+        <div>
+          <div style="font-size:13px;font-weight:500">${s.customer_id}</div>
+          <div style="font-size:11px;color:var(--text-3)">${s.agent_name} · ${fmtDate(s.updated_at)}</div>
+        </div>
+        <span class="badge ${s.has_thread ? 'badge-green' : 'badge-gray'}">${s.has_thread ? 'Activa' : 'Nueva'}</span>
+      </div>
+    `).join('');
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+// ── Agents ────────────────────────────────────────────────────────
+async function loadAgents() {
+  try {
+    const agents = await api('/admin/agents');
+    allTools = await api('/admin/tools');
+    const grid = document.getElementById('agents-grid');
+
+    if (!agents.length) {
+      grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🤖</div><p>No hay agentes. Crea el primero.</p></div>`;
+      return;
+    }
+
+    grid.innerHTML = agents.map(a => `
+      <div class="agent-card" onclick="openEditAgent(${JSON.stringify(a).replace(/"/g, '&quot;')})">
+        <div class="agent-card-header">
+          <div>
+            <div class="agent-name">${a.display_name}</div>
+            <div class="agent-role">${a.name} · ${a.role}</div>
+          </div>
+          <span class="badge ${a.is_active ? 'badge-green' : 'badge-gray'}">${a.is_active ? 'Activo' : 'Inactivo'}</span>
+        </div>
+        <div class="agent-model">${a.model}</div>
+        <div class="agent-instructions">${a.instructions}</div>
+        <div class="agent-tools">
+          ${(a.tools || []).map(t => `<span class="badge badge-blue">${t.display_name}</span>`).join('')}
+          ${!a.tools?.length ? '<span style="font-size:11px;color:var(--text-3)">Sin tools asignadas</span>' : ''}
+        </div>
+      </div>
+    `).join('');
+  } catch (e) {
+    toast(e.message, true);
+  }
+}
+
+function openNewAgent() {
+  document.getElementById('agent-modal-title').textContent = 'Nuevo agente';
+  document.getElementById('agent-id').value = '';
+  document.getElementById('agent-name').value = '';
+  document.getElementById('agent-name').disabled = false;
+  document.getElementById('agent-display-name').value = '';
+  document.getElementById('agent-instructions').value = '';
+  document.getElementById('agent-model').value = 'gpt-4o-mini';
+  document.getElementById('agent-role').value = 'default';
+  document.getElementById('agent-active').value = 'true';
+  renderToolChecks([]);
+  document.getElementById('agent-modal').classList.add('open');
+}
+
+function openEditAgent(agent) {
+  document.getElementById('agent-modal-title').textContent = 'Editar agente';
+  document.getElementById('agent-id').value = agent.id;
+  document.getElementById('agent-name').value = agent.name;
+  document.getElementById('agent-name').disabled = true;
+  document.getElementById('agent-display-name').value = agent.display_name;
+  document.getElementById('agent-instructions').value = agent.instructions;
+  document.getElementById('agent-model').value = agent.model;
+  document.getElementById('agent-role').value = agent.role;
+  document.getElementById('agent-active').value = agent.is_active ? 'true' : 'false';
+  const toolIds = (agent.tools || []).map(t => t.id);
+  renderToolChecks(toolIds);
+  document.getElementById('agent-modal').classList.add('open');
+}
+
+function renderToolChecks(selectedIds) {
+  const container = document.getElementById('tool-checks-container');
+  if (!allTools.length) {
+    container.innerHTML = '<div style="font-size:12px;color:var(--text-3);padding:8px">No hay tools creadas aún</div>';
+    return;
+  }
+  container.innerHTML = allTools.map(t => `
+    <label class="tool-check-item">
+      <input type="checkbox" value="${t.id}" ${selectedIds.includes(t.id) ? 'checked' : ''}>
+      <div><div class="tool-check-name">${t.display_name}</div><div class="tool-check-desc">${t.function_name}</div></div>
+    </label>
+  `).join('');
+}
+
+async function saveAgent() {
+  const id = document.getElementById('agent-id').value;
+  const toolIds = [...document.querySelectorAll('#tool-checks-container input:checked')].map(i => parseInt(i.value));
+
+  const payload = {
+    name: document.getElementById('agent-name').value.trim(),
+    display_name: document.getElementById('agent-display-name').value.trim(),
+    instructions: document.getElementById('agent-instructions').value.trim(),
+    model: document.getElementById('agent-model').value,
+    role: document.getElementById('agent-role').value,
+    is_active: document.getElementById('agent-active').value === 'true',
+    tool_ids: toolIds,
+  };
+
+  try {
+    if (id) {
+      await api(`/admin/agents/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+      toast('Agente actualizado ✓');
+    } else {
+      await api('/admin/agents', { method: 'POST', body: JSON.stringify(payload) });
+      toast('Agente creado ✓');
+    }
+    closeModal('agent-modal');
+    loadAgents();
+  } catch (e) {
+    toast(e.message, true);
+  }
+}
+
+// ── Tools ─────────────────────────────────────────────────────────
+async function loadTools() {
+  try {
+    const [tools, reg] = await Promise.all([
+      api('/admin/tools'),
+      api('/admin/registry'),
+    ]);
+    allTools = tools;
+    registryFns = reg.registered_functions || [];
+
+    // Registry chips
+    document.getElementById('registry-list').innerHTML = registryFns.map(f =>
+      `<span class="badge badge-amber">${f}</span>`
+    ).join('');
+
+    // Table
+    const tbody = document.getElementById('tools-tbody');
+    if (!tools.length) {
+      tbody.innerHTML = `<tr><td colspan="5"><div class="empty"><div class="empty-icon">🔧</div><p>No hay tools. Crea la primera.</p></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = tools.map(t => `
+      <tr>
+        <td><div style="font-weight:500">${t.display_name}</div><div style="font-size:11px;color:var(--text-3)">${t.name}</div></td>
+        <td><code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-size:12px">${t.function_name}</code></td>
+        <td style="max-width:220px;color:var(--text-2)">${t.description}</td>
+        <td><span class="badge ${t.is_active ? 'badge-green' : 'badge-gray'}">${t.is_active ? 'Activa' : 'Inactiva'}</span></td>
+        <td>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm" onclick="openEditTool(${t.id})">Editar</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteTool(${t.id})">Eliminar</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  } catch (e) {
+    toast(e.message, true);
+  }
+}
+
+function openNewTool() {
+  document.getElementById('tool-modal-title').textContent = 'Nueva tool';
+  document.getElementById('tool-id').value = '';
+  document.getElementById('tool-name').value = '';
+  document.getElementById('tool-display-name').value = '';
+  document.getElementById('tool-description').value = '';
+  populateFunctionSelect('');
+  document.getElementById('tool-modal').classList.add('open');
+}
+
+async function openEditTool(id) {
+  try {
+    const tools = await api('/admin/tools');
+    const t = tools.find(x => x.id === id);
+    if (!t) return;
+    document.getElementById('tool-modal-title').textContent = 'Editar tool';
+    document.getElementById('tool-id').value = t.id;
+    document.getElementById('tool-name').value = t.name;
+    document.getElementById('tool-display-name').value = t.display_name;
+    document.getElementById('tool-description').value = t.description;
+    populateFunctionSelect(t.function_name);
+    document.getElementById('tool-modal').classList.add('open');
+  } catch (e) { toast(e.message, true); }
+}
+
+function populateFunctionSelect(selected) {
+  const sel = document.getElementById('tool-function-name');
+  const fns = registryFns.length ? registryFns : [selected].filter(Boolean);
+  sel.innerHTML = '<option value="">— Selecciona una función —</option>' +
+    fns.map(f => `<option value="${f}" ${f === selected ? 'selected' : ''}>${f}</option>`).join('');
+}
+
+async function saveTool() {
+  const id = document.getElementById('tool-id').value;
+  const payload = {
+    name: document.getElementById('tool-name').value.trim(),
+    display_name: document.getElementById('tool-display-name').value.trim(),
+    description: document.getElementById('tool-description').value.trim(),
+    function_name: document.getElementById('tool-function-name').value,
+    parameters_schema: '{}',
+  };
+
+  try {
+    if (id) {
+      await api(`/admin/tools/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
+      toast('Tool actualizada ✓');
+    } else {
+      await api('/admin/tools', { method: 'POST', body: JSON.stringify(payload) });
+      toast('Tool creada ✓');
+    }
+    closeModal('tool-modal');
+    loadTools();
+  } catch (e) {
+    toast(e.message, true);
+  }
+}
+
+async function deleteTool(id) {
+  if (!confirm('¿Eliminar esta tool?')) return;
+  try {
+    await api(`/admin/tools/${id}`, { method: 'DELETE' });
+    toast('Tool eliminada');
+    loadTools();
+  } catch (e) { toast(e.message, true); }
+}
+
+// ── Sessions ──────────────────────────────────────────────────────
+async function loadSessions() {
+  try {
+    const sessions = await api('/admin/sessions?limit=50');
+    const tbody = document.getElementById('sessions-tbody');
+    if (!sessions.length) {
+      tbody.innerHTML = `<tr><td colspan="5"><div class="empty"><div class="empty-icon">💬</div><p>Sin sesiones</p></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = sessions.map(s => `
+      <tr>
+        <td><code style="font-size:12px">${s.customer_id}</code></td>
+        <td>${s.agent_name}</td>
+        <td><span class="badge ${s.has_thread ? 'badge-green' : 'badge-gray'}">${s.has_thread ? 'Con historial' : 'Nueva'}</span></td>
+        <td style="color:var(--text-2)">${fmtDate(s.updated_at)}</td>
+        <td><button class="btn btn-sm" onclick="resetSession('${s.customer_id}')">Resetear</button></td>
+      </tr>
+    `).join('');
+  } catch (e) { toast(e.message, true); }
+}
+
+async function resetSession(customerId) {
+  if (!confirm(`¿Resetear sesión de ${customerId}? El historial de conversación se perderá.`)) return;
+  try {
+    await fetch(API_URL + `/kustomer/reset/${customerId}`, { method: 'POST', headers: { 'x-admin-secret': ADMIN_SECRET } });
+    toast('Sesión reseteada ✓');
+    loadSessions();
+  } catch (e) { toast(e.message, true); }
+}
+
+// ── Utils ─────────────────────────────────────────────────────────
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+function toast(msg, isError = false) {
+  const t = document.createElement('div');
+  t.className = 'toast' + (isError ? ' error' : '');
+  t.textContent = msg;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  return d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+</script>
+</body>
+</html>
