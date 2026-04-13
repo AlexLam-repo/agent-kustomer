@@ -1,7 +1,7 @@
 import logging
 import json
-from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 import openai
 
@@ -16,7 +16,6 @@ settings = get_settings()
 def _build_tool_schema(tool: Tool) -> dict | None:
     fn = get_tool_function(tool.function_name)
     if fn is None:
-        logger.warning(f"Función '{tool.function_name}' no encontrada en registry")
         return None
     try:
         params = json.loads(tool.parameters_schema)
@@ -52,12 +51,12 @@ async def run_agent(
     context: dict | None = None,
     previous_response_id: str | None = None,
 ) -> tuple[str, None]:
-    result = await db.exec(
+    result = await db.execute(
         select(Agent)
         .where(Agent.name == agent_name, Agent.is_active == True)
         .options(selectinload(Agent.tools))
     )
-    agent_db = result.first()
+    agent_db = result.scalars().first()
 
     if not agent_db:
         logger.error(f"Agente '{agent_name}' no encontrado o inactivo")
@@ -99,15 +98,11 @@ async def run_agent(
                 "role": "assistant",
                 "content": msg.content,
                 "tool_calls": [
-                    {
-                        "id": tc.id,
-                        "type": "function",
-                        "function": {"name": tc.function.name, "arguments": tc.function.arguments},
-                    }
+                    {"id": tc.id, "type": "function",
+                     "function": {"name": tc.function.name, "arguments": tc.function.arguments}}
                     for tc in msg.tool_calls
                 ],
             })
-
             for tc in msg.tool_calls:
                 messages.append({
                     "role": "tool",
@@ -123,8 +118,8 @@ async def run_agent(
 
 
 async def seed_default_agent(db: AsyncSession):
-    result = await db.exec(select(Agent).limit(1))
-    if result.first():
+    result = await db.execute(select(Agent).limit(1))
+    if result.scalars().first():
         return
     agent = Agent(
         name="default",

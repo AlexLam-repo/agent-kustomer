@@ -6,6 +6,9 @@ class Settings(BaseSettings):
     environment: str = "local"
     admin_secret: str = "change-me"
 
+    # DB puede venir como URL completa (Railway) o por partes
+    database_url: str = ""
+
     db_user: str = "root"
     db_password: str = "password"
     db_host: str = "localhost"
@@ -23,8 +26,17 @@ class Settings(BaseSettings):
 
     slack_webhook_url: str = ""
 
-    @property
-    def database_url(self) -> str:
+    def get_database_url(self) -> str:
+        # Si viene DATABASE_URL directo de Railway, úsalo
+        if self.database_url:
+            # Railway da mysql://, necesitamos mysql+aiomysql://
+            url = self.database_url
+            if url.startswith("mysql://"):
+                url = url.replace("mysql://", "mysql+aiomysql://", 1)
+            if url.startswith("mysql+mysqlconnector://"):
+                url = url.replace("mysql+mysqlconnector://", "mysql+aiomysql://", 1)
+            return url
+        # Si no, construir desde partes
         return (
             f"mysql+aiomysql://{self.db_user}:{self.db_password}"
             f"@{self.db_host}:{self.db_port}/{self.db_name}"

@@ -2,8 +2,8 @@ import hashlib
 import hmac
 import logging
 from datetime import datetime
-from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from app.config import get_settings
 from app.sessions.models import ConversationSession
 from app.agents.service import run_agent
@@ -30,13 +30,13 @@ async def get_or_create_session(
     customer_id: str,
     agent_name: str = "default",
 ) -> ConversationSession:
-    result = await db.exec(
+    result = await db.execute(
         select(ConversationSession).where(
             ConversationSession.customer_id == customer_id,
             ConversationSession.provider == "kustomer",
         )
     )
-    session = result.first()
+    session = result.scalars().first()
     if session:
         return session
 
@@ -48,7 +48,6 @@ async def get_or_create_session(
     db.add(session)
     await db.commit()
     await db.refresh(session)
-    logger.info(f"Nueva sesión creada para {customer_id}")
     return session
 
 
@@ -61,7 +60,6 @@ async def process_message(
     context: dict | None = None,
 ) -> None:
     session = await get_or_create_session(db, customer_id, agent_name)
-
     response_text, _ = await run_agent(
         db=db,
         agent_name=session.agent_name,
@@ -69,7 +67,6 @@ async def process_message(
         context=context,
         previous_response_id=session.openai_response_id,
     )
-
     try:
         await kustomer_client.send_message(conversation_id, response_text)
     except Exception as e:
@@ -81,13 +78,13 @@ async def process_message(
 
 
 async def reset_session(db: AsyncSession, customer_id: str) -> bool:
-    result = await db.exec(
+    result = await db.execute(
         select(ConversationSession).where(
             ConversationSession.customer_id == customer_id,
             ConversationSession.provider == "kustomer",
         )
     )
-    session = result.first()
+    session = result.scalars().first()
     if not session:
         return False
     session.openai_response_id = None

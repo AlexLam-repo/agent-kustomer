@@ -6,7 +6,7 @@ from app.config import get_settings
 settings = get_settings()
 
 async_engine: AsyncEngine = create_async_engine(
-    settings.database_url,
+    settings.get_database_url(),
     echo=False,
     pool_pre_ping=True,
     pool_recycle=3600,
