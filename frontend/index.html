@@ -6,7 +6,7 @@
 <title>Agentos — Gestor de Agentes</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+ 
   :root {
     --bg: #f5f4f0;
     --surface: #ffffff;
@@ -29,7 +29,7 @@
     --radius-sm: 6px;
     --shadow: 0 1px 3px rgba(0,0,0,0.08);
   }
-
+ 
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: var(--bg);
@@ -38,10 +38,10 @@
     line-height: 1.5;
     min-height: 100vh;
   }
-
+ 
   /* ── Layout ── */
   .shell { display: flex; min-height: 100vh; }
-
+ 
   .sidebar {
     width: 220px;
     flex-shrink: 0;
@@ -53,14 +53,14 @@
     top: 0;
     height: 100vh;
   }
-
+ 
   .sidebar-logo {
     padding: 20px 18px 16px;
     border-bottom: 0.5px solid var(--border);
   }
   .sidebar-logo h1 { font-size: 16px; font-weight: 600; letter-spacing: -0.3px; }
   .sidebar-logo p { font-size: 11px; color: var(--text-3); margin-top: 2px; }
-
+ 
   .nav { flex: 1; padding: 10px 8px; }
   .nav-item {
     display: flex;
@@ -78,7 +78,7 @@
   .nav-item:hover { background: var(--bg); color: var(--text); }
   .nav-item.active { background: var(--accent); color: #fff; }
   .nav-icon { font-size: 15px; width: 18px; text-align: center; }
-
+ 
   .sidebar-footer {
     padding: 12px 8px;
     border-top: 0.5px solid var(--border);
@@ -95,9 +95,9 @@
   }
   .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
   .dot.red { background: var(--red); }
-
+ 
   .main { flex: 1; overflow: auto; }
-
+ 
   .topbar {
     background: var(--surface);
     border-bottom: 0.5px solid var(--border);
@@ -111,13 +111,13 @@
   }
   .page-title { font-size: 15px; font-weight: 600; }
   .topbar-actions { display: flex; gap: 8px; align-items: center; }
-
+ 
   .content { padding: 24px 28px; }
-
+ 
   /* ── Sections ── */
   .section { display: none; }
   .section.active { display: block; }
-
+ 
   /* ── Cards ── */
   .card {
     background: var(--surface);
@@ -128,7 +128,7 @@
     box-shadow: var(--shadow);
   }
   .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
-
+ 
   .agent-card {
     background: var(--surface);
     border: 0.5px solid var(--border);
@@ -146,7 +146,7 @@
   .agent-tools { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 10px; }
   .agent-instructions { font-size: 12px; color: var(--text-2); line-height: 1.5; margin-top: 8px;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-
+ 
   /* ── Buttons ── */
   .btn {
     display: inline-flex;
@@ -168,7 +168,7 @@
   .btn-primary:hover { opacity: .88; background: var(--accent); }
   .btn-danger { background: var(--red-bg); color: var(--red); border-color: transparent; }
   .btn-sm { padding: 4px 10px; font-size: 12px; }
-
+ 
   /* ── Badges ── */
   .badge {
     display: inline-block;
@@ -181,7 +181,7 @@
   .badge-green { background: var(--green-bg); color: var(--green); }
   .badge-amber { background: var(--amber-bg); color: var(--amber); }
   .badge-gray { background: var(--bg); color: var(--text-2); border: 0.5px solid var(--border); }
-
+ 
   /* ── Forms ── */
   .form-group { margin-bottom: 16px; }
   .form-label { display: block; font-size: 12px; font-weight: 500; color: var(--text-2); margin-bottom: 5px; }
@@ -201,9 +201,9 @@
   .form-textarea { min-height: 120px; resize: vertical; }
   .form-select { appearance: none; cursor: pointer; }
   .form-hint { font-size: 11px; color: var(--text-3); margin-top: 4px; }
-
+ 
   .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-
+ 
   /* ── Modal ── */
   .modal-overlay {
     position: fixed; inset: 0;
@@ -246,7 +246,7 @@
     justify-content: flex-end;
     gap: 8px;
   }
-
+ 
   /* ── Table ── */
   .table-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; }
@@ -268,7 +268,7 @@
   }
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: var(--bg); }
-
+ 
   /* ── Tools checkboxes ── */
   .tool-checks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; max-height: 180px; overflow-y: auto; }
   .tool-check-item {
@@ -285,13 +285,13 @@
   .tool-check-item input { margin-top: 2px; accent-color: var(--accent); }
   .tool-check-name { font-size: 12px; font-weight: 500; }
   .tool-check-desc { font-size: 11px; color: var(--text-3); margin-top: 1px; }
-
+ 
   /* ── Stat cards ── */
   .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
   .stat-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; box-shadow: var(--shadow); }
   .stat-label { font-size: 11px; color: var(--text-3); font-weight: 500; text-transform: uppercase; letter-spacing: .04em; }
   .stat-val { font-size: 26px; font-weight: 600; margin-top: 4px; }
-
+ 
   /* ── Toast ── */
   .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 999; display: flex; flex-direction: column; gap: 8px; }
   .toast {
@@ -305,12 +305,12 @@
   }
   .toast.error { background: var(--red); }
   @keyframes slideIn { from { transform: translateX(20px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
+ 
   /* ── Empty state ── */
   .empty { text-align: center; padding: 48px 20px; color: var(--text-3); }
   .empty-icon { font-size: 36px; margin-bottom: 12px; }
   .empty p { font-size: 14px; }
-
+ 
   /* ── Settings ── */
   .settings-row {
     display: flex;
@@ -325,7 +325,7 @@
 </style>
 </head>
 <body>
-
+ 
 <div class="shell">
   <!-- Sidebar -->
   <aside class="sidebar">
@@ -357,16 +357,16 @@
       </div>
     </div>
   </aside>
-
+ 
   <!-- Main -->
   <div class="main">
     <div class="topbar">
       <div class="page-title" id="page-title">Dashboard</div>
       <div class="topbar-actions" id="topbar-actions"></div>
     </div>
-
+ 
     <div class="content">
-
+ 
       <!-- DASHBOARD -->
       <div class="section active" id="section-dashboard">
         <div class="stats" id="stats-grid">
@@ -380,12 +380,12 @@
           <div id="recent-sessions-list"></div>
         </div>
       </div>
-
+ 
       <!-- AGENTS -->
       <div class="section" id="section-agents">
         <div class="card-grid" id="agents-grid"></div>
       </div>
-
+ 
       <!-- TOOLS -->
       <div class="section" id="section-tools">
         <div class="card">
@@ -409,7 +409,7 @@
           <div id="registry-list" style="display:flex;gap:6px;flex-wrap:wrap"></div>
         </div>
       </div>
-
+ 
       <!-- SESSIONS -->
       <div class="section" id="section-sessions">
         <div class="card">
@@ -429,7 +429,7 @@
           </div>
         </div>
       </div>
-
+ 
       <!-- SETTINGS -->
       <div class="section" id="section-settings">
         <div class="card">
@@ -464,14 +464,14 @@
           </ol>
         </div>
       </div>
-
+ 
     </div><!-- /content -->
   </div><!-- /main -->
 </div><!-- /shell -->
-
+ 
 <!-- Toast container -->
 <div class="toast-container" id="toasts"></div>
-
+ 
 <!-- Agent Modal -->
 <div class="modal-overlay" id="agent-modal">
   <div class="modal">
@@ -537,7 +537,7 @@
     </div>
   </div>
 </div>
-
+ 
 <!-- Tool Modal -->
 <div class="modal-overlay" id="tool-modal">
   <div class="modal">
@@ -575,15 +575,15 @@
     </div>
   </div>
 </div>
-
+ 
 <script>
 // ── State ──────────────────────────────────────────────────────────
-let API_URL = localStorage.getItem('ag_url') || '';
+let API_URL = localStorage.getItem('ag_url') || (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1' ? window.location.origin : '');
 let ADMIN_SECRET = localStorage.getItem('ag_secret') || '';
 let allTools = [];
 let registryFns = [];
 let currentSection = 'dashboard';
-
+ 
 // ── Init ──────────────────────────────────────────────────────────
 window.addEventListener('load', () => {
   document.getElementById('setting-url').value = API_URL;
@@ -597,7 +597,7 @@ window.addEventListener('load', () => {
     toast('Configura la URL del backend para empezar', false);
   }
 });
-
+ 
 // ── Navigation ────────────────────────────────────────────────────
 function showSection(name) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
@@ -605,13 +605,13 @@ function showSection(name) {
   document.getElementById('section-' + name).classList.add('active');
   document.getElementById('nav-' + name).classList.add('active');
   currentSection = name;
-
+ 
   const titles = { dashboard: 'Dashboard', agents: 'Agentes', tools: 'Tools', sessions: 'Sesiones activas', settings: 'Configuración' };
   document.getElementById('page-title').textContent = titles[name] || name;
-
+ 
   const actions = document.getElementById('topbar-actions');
   actions.innerHTML = '';
-
+ 
   if (name === 'agents') {
     actions.innerHTML = `<button class="btn btn-primary" onclick="openNewAgent()">+ Nuevo agente</button>`;
     loadAgents();
@@ -625,7 +625,7 @@ function showSection(name) {
     loadDashboard();
   }
 }
-
+ 
 // ── API helpers ───────────────────────────────────────────────────
 async function api(path, opts = {}) {
   const url = API_URL + path;
@@ -638,7 +638,7 @@ async function api(path, opts = {}) {
   if (res.status === 204) return null;
   return res.json();
 }
-
+ 
 // ── Connection ────────────────────────────────────────────────────
 async function testConnection(silent = false) {
   try {
@@ -656,7 +656,7 @@ async function testConnection(silent = false) {
     if (!silent) toast('No se pudo conectar al backend', true);
   }
 }
-
+ 
 function saveSettings() {
   API_URL = document.getElementById('setting-url').value.trim().replace(/\/$/, '');
   ADMIN_SECRET = document.getElementById('setting-secret').value.trim();
@@ -665,7 +665,7 @@ function saveSettings() {
   document.getElementById('webhook-url-hint').textContent = API_URL + '/kustomer/webhook';
   testConnection();
 }
-
+ 
 // ── Dashboard ─────────────────────────────────────────────────────
 async function loadDashboard() {
   try {
@@ -677,7 +677,7 @@ async function loadDashboard() {
     document.getElementById('stat-agents').textContent = agents.length;
     document.getElementById('stat-tools').textContent = tools.length;
     document.getElementById('stat-sessions').textContent = sessions.length;
-
+ 
     const list = document.getElementById('recent-sessions-list');
     if (!sessions.length) {
       list.innerHTML = `<div class="empty"><div class="empty-icon">💬</div><p>Sin sesiones aún</p></div>`;
@@ -696,19 +696,19 @@ async function loadDashboard() {
     console.error(e);
   }
 }
-
+ 
 // ── Agents ────────────────────────────────────────────────────────
 async function loadAgents() {
   try {
     const agents = await api('/admin/agents');
     allTools = await api('/admin/tools');
     const grid = document.getElementById('agents-grid');
-
+ 
     if (!agents.length) {
       grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><div class="empty-icon">🤖</div><p>No hay agentes. Crea el primero.</p></div>`;
       return;
     }
-
+ 
     grid.innerHTML = agents.map(a => `
       <div class="agent-card" onclick="openEditAgent(${JSON.stringify(a).replace(/"/g, '&quot;')})">
         <div class="agent-card-header">
@@ -730,7 +730,7 @@ async function loadAgents() {
     toast(e.message, true);
   }
 }
-
+ 
 function openNewAgent() {
   document.getElementById('agent-modal-title').textContent = 'Nuevo agente';
   document.getElementById('agent-id').value = '';
@@ -744,7 +744,7 @@ function openNewAgent() {
   renderToolChecks([]);
   document.getElementById('agent-modal').classList.add('open');
 }
-
+ 
 function openEditAgent(agent) {
   document.getElementById('agent-modal-title').textContent = 'Editar agente';
   document.getElementById('agent-id').value = agent.id;
@@ -759,7 +759,7 @@ function openEditAgent(agent) {
   renderToolChecks(toolIds);
   document.getElementById('agent-modal').classList.add('open');
 }
-
+ 
 function renderToolChecks(selectedIds) {
   const container = document.getElementById('tool-checks-container');
   if (!allTools.length) {
@@ -773,11 +773,11 @@ function renderToolChecks(selectedIds) {
     </label>
   `).join('');
 }
-
+ 
 async function saveAgent() {
   const id = document.getElementById('agent-id').value;
   const toolIds = [...document.querySelectorAll('#tool-checks-container input:checked')].map(i => parseInt(i.value));
-
+ 
   const payload = {
     name: document.getElementById('agent-name').value.trim(),
     display_name: document.getElementById('agent-display-name').value.trim(),
@@ -787,7 +787,7 @@ async function saveAgent() {
     is_active: document.getElementById('agent-active').value === 'true',
     tool_ids: toolIds,
   };
-
+ 
   try {
     if (id) {
       await api(`/admin/agents/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
@@ -802,7 +802,7 @@ async function saveAgent() {
     toast(e.message, true);
   }
 }
-
+ 
 // ── Tools ─────────────────────────────────────────────────────────
 async function loadTools() {
   try {
@@ -812,12 +812,12 @@ async function loadTools() {
     ]);
     allTools = tools;
     registryFns = reg.registered_functions || [];
-
+ 
     // Registry chips
     document.getElementById('registry-list').innerHTML = registryFns.map(f =>
       `<span class="badge badge-amber">${f}</span>`
     ).join('');
-
+ 
     // Table
     const tbody = document.getElementById('tools-tbody');
     if (!tools.length) {
@@ -842,7 +842,7 @@ async function loadTools() {
     toast(e.message, true);
   }
 }
-
+ 
 function openNewTool() {
   document.getElementById('tool-modal-title').textContent = 'Nueva tool';
   document.getElementById('tool-id').value = '';
@@ -852,7 +852,7 @@ function openNewTool() {
   populateFunctionSelect('');
   document.getElementById('tool-modal').classList.add('open');
 }
-
+ 
 async function openEditTool(id) {
   try {
     const tools = await api('/admin/tools');
@@ -867,14 +867,14 @@ async function openEditTool(id) {
     document.getElementById('tool-modal').classList.add('open');
   } catch (e) { toast(e.message, true); }
 }
-
+ 
 function populateFunctionSelect(selected) {
   const sel = document.getElementById('tool-function-name');
   const fns = registryFns.length ? registryFns : [selected].filter(Boolean);
   sel.innerHTML = '<option value="">— Selecciona una función —</option>' +
     fns.map(f => `<option value="${f}" ${f === selected ? 'selected' : ''}>${f}</option>`).join('');
 }
-
+ 
 async function saveTool() {
   const id = document.getElementById('tool-id').value;
   const payload = {
@@ -884,7 +884,7 @@ async function saveTool() {
     function_name: document.getElementById('tool-function-name').value,
     parameters_schema: '{}',
   };
-
+ 
   try {
     if (id) {
       await api(`/admin/tools/${id}`, { method: 'PATCH', body: JSON.stringify(payload) });
@@ -899,7 +899,7 @@ async function saveTool() {
     toast(e.message, true);
   }
 }
-
+ 
 async function deleteTool(id) {
   if (!confirm('¿Eliminar esta tool?')) return;
   try {
@@ -908,7 +908,7 @@ async function deleteTool(id) {
     loadTools();
   } catch (e) { toast(e.message, true); }
 }
-
+ 
 // ── Sessions ──────────────────────────────────────────────────────
 async function loadSessions() {
   try {
@@ -929,7 +929,7 @@ async function loadSessions() {
     `).join('');
   } catch (e) { toast(e.message, true); }
 }
-
+ 
 async function resetSession(customerId) {
   if (!confirm(`¿Resetear sesión de ${customerId}? El historial de conversación se perderá.`)) return;
   try {
@@ -938,12 +938,12 @@ async function resetSession(customerId) {
     loadSessions();
   } catch (e) { toast(e.message, true); }
 }
-
+ 
 // ── Utils ─────────────────────────────────────────────────────────
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
 }
-
+ 
 function toast(msg, isError = false) {
   const t = document.createElement('div');
   t.className = 'toast' + (isError ? ' error' : '');
@@ -951,13 +951,13 @@ function toast(msg, isError = false) {
   document.getElementById('toasts').appendChild(t);
   setTimeout(() => t.remove(), 3500);
 }
-
+ 
 function fmtDate(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
   return d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
-
+ 
 // Close modal on overlay click
 document.querySelectorAll('.modal-overlay').forEach(overlay => {
   overlay.addEventListener('click', e => {
@@ -967,3 +967,4 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
 </script>
 </body>
 </html>
+ 
